@@ -16,6 +16,7 @@ if (function_exists('opcache_reset')) {
     opcache_reset();
 }
 
+require_once plugin_dir_path(__FILE__) . 'lib/rest.php';
 require_once plugin_dir_path(__FILE__) . 'lib/enqueue.php';
 require_once plugin_dir_path(__FILE__) . 'lib/acf.php';
 require_once plugin_dir_path(__FILE__) . 'lib/shortcodes.php';

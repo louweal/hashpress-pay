@@ -21,10 +21,9 @@ function enqueue_hashpress_pay_script()
                 'strategy'  => 'defer', 'in_footer' => false
             ));
 
-            // Localize the REST API URL and nonce for authentication
-            wp_localize_script('hashpress-pay-main-script', 'hashpressData', array(
-                'nonce' => wp_create_nonce('wp_rest'),  // Generate a nonce for authentication
-                'rest_url' => esc_url_raw(rest_url('hashpress/v1/get-project-settings'))  // REST API endpoint URL
+            wp_localize_script('hashpress-pay-main-script', 'myButtonData', array(
+                'nonce' => wp_create_nonce('wp_rest'),   // Nonce for security
+                'restUrl' => rest_url('hashpress_pay/v1/get_data') // REST API URL
             ));
 
             wp_enqueue_script('hashpress-pay-vendor-script', $path .  'dist/vendors.bundle.js', array(), null, array(

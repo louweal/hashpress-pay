@@ -12,6 +12,9 @@ function hashpress_pay_wrapper_function($atts)
 
 function hashpress_pay_function($atts, $shortcode)
 {
+    $unique_id = bin2hex(random_bytes(8));
+
+
     if ($shortcode) {
         $title = isset($atts['title']) ? esc_html($atts['title']) : 'Pay';
         $memo = isset($atts['memo']) ? esc_html($atts['memo']) : null;
@@ -43,6 +46,20 @@ function hashpress_pay_function($atts, $shortcode)
 
     $badge = $network != "mainnet" ? '<span class="badge">' . $network . '</span>' : '';
 
+    $data = array(
+        "title" => $title,
+        "memo" => $memo,
+        "amount" => $amount,
+        "currency" => $currency,
+        "store" => $store,
+        "network" => $network,
+        "wallet" => $wallet,
+        "accepts" => $accepts
+    );
+
+    // Store the attributes in a transient with the unique ID as part of the key
+    set_transient("hashpress_pay_{$unique_id}", $data, 12 * HOUR_IN_SECONDS);
+
     ob_start();
     if (!is_admin()) {
 
@@ -53,7 +70,7 @@ function hashpress_pay_function($atts, $shortcode)
             <?php }; //if
             ?>
 
-            <button type="button" class="btn hashpress-btn pay" data-network="<?php echo $network; ?>" data-wallet="<?php echo $wallet; ?>" data-amount="<?php echo $amount; ?>" data-currency="<?php echo $currency; ?>" data-memo="<?php echo $memo; ?>" data-store="<?php echo $store; ?>" data-accepts="<?php echo $accepts; ?>">
+            <button type="button" class="btn hashpress-btn pay" data-id="<?php echo $unique_id; ?>">
                 <?php echo $title; ?><?php echo $badge; ?>
             </button>
 

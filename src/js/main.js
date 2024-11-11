@@ -36,43 +36,61 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
                 console.log("clicked!");
                 updateNotice(notice, "");
 
-                const network = payButton.dataset.network;
-                await ensureCorrectNetwork(network, notice);
+                const buttonData = await fetchDataById(payButton.dataset.id);
 
-                const acceptedCurrency = payButton.dataset.accepts.toUpperCase();
+                await ensureCorrectNetwork(buttonData.network, notice);
+
+                const acceptedCurrency = buttonData.accepts.toUpperCase();
 
                 let result =
                     acceptedCurrency === "HBAR"
-                        ? await handleHBARTransaction(payButton, notice)
-                        : await handleUSDCTransaction(payButton, notice);
+                        ? await handleHBARTransaction(payButton, buttonData, notice)
+                        : await handleUSDCTransaction(buttonData, notice);
 
                 if (result) {
                     const { transactionId, receipt } = result;
                     if (receipt.status?.toString() === "SUCCESS") {
-                        handleSuccess(payButton, transactionId, notice);
+                        handleSuccess(buttonData, transactionId, notice);
                     }
                 }
             });
         }); //foreach
     }
 
-    // Function to toggle the shortcode display based on payment method selection
-    function toggleCustomPaymentShortcode() {
-        const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
-        const shortcodeContainer = document.getElementById("hashpress-pay-hbar");
-        if (!selectedPaymentMethod || !shortcodeContainer) return;
+    async function fetchDataById(id) {
+        try {
+            const response = await fetch(`${myButtonData.restUrl}?id=${id}`, {
+                method: "GET",
+                headers: {
+                    "X-WP-Nonce": myButtonData.nonce, // Nonce from wp_localize_script
+                },
+            });
 
-        if (selectedPaymentMethod.value === "hashpress-pay-hbar") {
-            shortcodeContainer.classList.add("is-active");
-        } else {
-            shortcodeContainer.classList.remove("is-active");
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                console.error(`Error fetching data for ID ${id}: ${data.error}`);
+                return;
+            }
+
+            console.log(`Fetched data for ID ${id}:`, data);
+            console.log(typeof data);
+
+            return data;
+        } catch (error) {
+            // Handle errors
+            console.error(`Error fetching data for ID ${id}:`, error);
         }
     }
 
-    function handleSuccess(button, transactionId, notice) {
+    function handleSuccess(buttonData, transactionId, notice) {
         updateNotice(notice, "Transaction successful!");
 
-        if (button.dataset.store === "true") {
+        if (buttonData.store === "true") {
             // todo: store transaction id using a rest update route
             // we need transaction id..
             console.log(transactionId);
@@ -90,74 +108,49 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
         }
     }
 
-    async function handleUSDCTransaction(button, notice) {
-        const network = button.dataset.network;
-        // const balance = await getUSDCBalance(network, USDC_TOKEN_MAP[network], window.pairingData.accountIds[0]);
+    async function handleUSDCTransaction(buttonData, notice) {
+        const network = buttonData.network;
 
-        const currency = button.dataset.currency;
-        const amount = button.dataset.amount;
+        const currency = buttonData.currency;
+        const amount = buttonData.amount;
         const usdcAmount = await convertCurrencyToUSDC(amount, currency);
 
-        // if (usdcAmount <= balance) {
-
         const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
-        const toAccount = AccountId.fromString(button.dataset.wallet);
+        const toAccount = AccountId.fromString(buttonData.wallet);
 
         const signer = window.hashconnect.getSigner(fromAccount);
 
         const transaction = await new TransferTransaction()
             .addTokenTransfer(TokenId.fromString(USDC_TOKEN_MAP[network]), fromAccount, -usdcAmount) //Sending account
             .addTokenTransfer(TokenId.fromString(USDC_TOKEN_MAP[network]), toAccount, usdcAmount) //Receiving account
-            .setTransactionMemo(button.dataset.memo)
+            .setTransactionMemo(buttonData.memo)
             .freezeWithSigner(signer);
 
         return await executeTransaction(transaction, notice);
-        // } else {
-        //     console.log("Insufficient USDC balance.");
-        //     updateNotice(notice, "Insufficient USDC balance.");
-        // }
     }
 
-    async function handleHBARTransaction(button, notice) {
-        const tinybarAmount = await getTinybarAmount(button, notice);
+    async function handleHBARTransaction(button, buttonData, notice) {
+        const tinybarAmount = await getTinybarAmount(button, buttonData, notice);
 
         if (tinybarAmount) {
             const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
-            const toAccount = AccountId.fromString(button.dataset.wallet);
+            const toAccount = AccountId.fromString(buttonData.wallet);
 
             const signer = window.hashconnect.getSigner(fromAccount);
 
             const transaction = await new TransferTransaction()
                 .addHbarTransfer(fromAccount, Hbar.fromTinybars(-1 * tinybarAmount)) //Sending account
                 .addHbarTransfer(toAccount, Hbar.fromTinybars(tinybarAmount)) //Receiving account
-                .setTransactionMemo(button.dataset.memo)
+                .setTransactionMemo(buttonData.memo)
                 .freezeWithSigner(signer);
 
             return await executeTransaction(transaction, notice);
-        } else {
-            // updateNotice(notice, "Insufficient HBAR balance or error in amount conversion.");
         }
     }
 
-    // async function getUSDCBalance(network, tokenId, accountId) {
-    //     let url = `https://${network}.mirrornode.hedera.com/api/v1/accounts/${accountId}`;
-
-    //     try {
-    //         const response = await fetch(url);
-    //         const data = await response.json();
-
-    //         const tokens = data?.balance?.tokens || [];
-    //         const tokenData = tokens.find((token) => token.token_id === tokenId);
-    //         return tokenData ? tokenData.balance : 0;
-    //     } catch (err) {
-    //         console.error("Error fetching USDC balance:", err);
-    //         return 0;
-    //     }
-    // }
-
-    async function getTinybarAmount(button, notice) {
-        let amount = button.dataset.amount;
-        const currency = button.dataset.currency;
+    async function getTinybarAmount(button, buttonData, notice) {
+        let amount = buttonData.amount;
+        const currency = buttonData.currency;
 
         updateNotice(notice, "");
 
