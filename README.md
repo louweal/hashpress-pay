@@ -1,0 +1,2 @@
+# hashpress-pay
+WordPress Plugin
