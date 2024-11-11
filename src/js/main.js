@@ -4,26 +4,22 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 (function () {
     "use strict";
 
-    console.log("pay!");
+    // console.log("pay!");
 
     const USDC_TOKEN_MAP = {
         mainnet: "0.0.456858",
         testnet: "0.0.429274",
     };
 
-    // Helper to update the notice message
+    setupPayButtons();
+
     const updateNotice = (element, message) => {
         element.innerText = message;
     };
 
-    setupPayButtons();
-
+    // Trigger pay button click during woocommerce checkout
     var checkoutButton = document.querySelector("#hashpress-pay-woocommerce .hashpress-pay .pay");
-
-    // Trigger the button click event if it exists
-    if (checkoutButton) {
-        checkoutButton.click();
-    }
+    if (checkoutButton) checkoutButton.click();
 
     function setupPayButtons() {
         let instances = document.querySelectorAll(".hashpress-pay");
@@ -62,38 +58,20 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
             const response = await fetch(`${myButtonData.restUrl}?id=${id}`, {
                 method: "GET",
                 headers: {
-                    "X-WP-Nonce": myButtonData.nonce, // Nonce from wp_localize_script
+                    "X-WP-Nonce": myButtonData.nonce,
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-
             if (data.error) {
                 console.error(`Error fetching data for ID ${id}: ${data.error}`);
                 return;
             }
-
-            console.log(`Fetched data for ID ${id}:`, data);
-            console.log(typeof data);
-
             return data;
         } catch (error) {
-            // Handle errors
             console.error(`Error fetching data for ID ${id}:`, error);
-        }
-    }
-
-    function handleSuccess(buttonData, transactionId, notice) {
-        updateNotice(notice, "Transaction successful!");
-
-        if (buttonData.store === "true") {
-            // todo: store transaction id using a rest update route
-            // we need transaction id..
-            console.log(transactionId);
         }
     }
 
@@ -105,6 +83,25 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
         }
         if (!window.pairingData) {
             await window.initializeHashconnect(network);
+        }
+    }
+
+    async function handleHBARTransaction(button, buttonData, notice) {
+        const tinybarAmount = await getTinybarAmount(button, buttonData, notice);
+
+        if (tinybarAmount) {
+            const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
+            const toAccount = AccountId.fromString(buttonData.wallet);
+
+            const signer = window.hashconnect.getSigner(fromAccount);
+
+            const transaction = await new TransferTransaction()
+                .addHbarTransfer(fromAccount, Hbar.fromTinybars(-1 * tinybarAmount)) //Sending account
+                .addHbarTransfer(toAccount, Hbar.fromTinybars(tinybarAmount)) //Receiving account
+                .setTransactionMemo(buttonData.memo)
+                .freezeWithSigner(signer);
+
+            return await executeTransaction(transaction, notice);
         }
     }
 
@@ -129,22 +126,33 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
         return await executeTransaction(transaction, notice);
     }
 
-    async function handleHBARTransaction(button, buttonData, notice) {
-        const tinybarAmount = await getTinybarAmount(button, buttonData, notice);
+    async function executeTransaction(transaction, notice) {
+        const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
+        const signer = window.hashconnect.getSigner(fromAccount);
 
-        if (tinybarAmount) {
-            const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
-            const toAccount = AccountId.fromString(buttonData.wallet);
+        try {
+            const response = await transaction.executeWithSigner(signer);
+            const transactionId = response.transactionId.toString();
+            const receipt = await response.getReceiptWithSigner(signer);
+            return { transactionId, receipt };
+        } catch (e) {
+            console.log(e);
+            if (e.code === 9000) {
+                updateNotice(notice, "Transaction rejected by user or insufficient balance.");
+            } else {
+                updateNotice(notice, "Transaction failed. Please try again. ");
+            }
+            return null;
+        }
+    }
 
-            const signer = window.hashconnect.getSigner(fromAccount);
+    function handleSuccess(buttonData, transactionId, notice) {
+        updateNotice(notice, "Transaction successful!");
 
-            const transaction = await new TransferTransaction()
-                .addHbarTransfer(fromAccount, Hbar.fromTinybars(-1 * tinybarAmount)) //Sending account
-                .addHbarTransfer(toAccount, Hbar.fromTinybars(tinybarAmount)) //Receiving account
-                .setTransactionMemo(buttonData.memo)
-                .freezeWithSigner(signer);
-
-            return await executeTransaction(transaction, notice);
+        if (buttonData.store === "true") {
+            // todo: store transaction id using a rest update route
+            // we need transaction id..
+            console.log(transactionId);
         }
     }
 
@@ -215,26 +223,6 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
         } catch (error) {
             console.error("Error fetching coingecko price:", error);
             throw error;
-        }
-    }
-
-    async function executeTransaction(transaction, notice) {
-        const fromAccount = AccountId.fromString(window.pairingData.accountIds[0]); // assumes paired and takes first paired account id
-        const signer = window.hashconnect.getSigner(fromAccount);
-
-        try {
-            const response = await transaction.executeWithSigner(signer);
-            const transactionId = response.transactionId.toString();
-            const receipt = await response.getReceiptWithSigner(signer);
-            return { transactionId, receipt };
-        } catch (e) {
-            console.log(e);
-            if (e.code === 9000) {
-                updateNotice(notice, "Transaction rejected by user or insufficient balance.");
-            } else {
-                updateNotice(notice, "Transaction failed. Please try again. ");
-            }
-            return null;
         }
     }
 })();
