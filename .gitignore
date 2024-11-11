@@ -1,0 +1,19 @@
+# gitignore for hashpress-pay
+notes.txt
+
+# Folders
+dist
+src/test
+node_modules
+.vscode
+
+# Random generated files
+.DS_Store
+.env
+thumbs.db
+
+# NPM files
+npm-debug.log
+package-lock.json
+
+.env

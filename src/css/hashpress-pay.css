@@ -1,0 +1,8 @@
+.hashpress-pay {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.hashpress-pay .notice {
+    min-width: 100%;
+}
