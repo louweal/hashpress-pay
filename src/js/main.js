@@ -4,7 +4,7 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 (function () {
     "use strict";
 
-    // console.log("pay!");
+    console.log("pay!");
 
     const USDC_TOKEN_MAP = {
         mainnet: "0.0.456858",
@@ -29,7 +29,6 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
             const notice = instance.querySelector(".notice");
 
             payButton.addEventListener("click", async function () {
-                console.log("clicked!");
                 updateNotice(notice, "");
 
                 const buttonData = await fetchDataById(payButton.dataset.id);
@@ -55,10 +54,10 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 
     async function fetchDataById(id) {
         try {
-            const response = await fetch(`${myButtonData.restUrl}?id=${id}`, {
+            const response = await fetch(`${phpData.getButtonDataUrl}?id=${id}`, {
                 method: "GET",
                 headers: {
-                    "X-WP-Nonce": myButtonData.nonce,
+                    "X-WP-Nonce": phpData.nonce,
                 },
             });
 
@@ -73,6 +72,31 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
         } catch (error) {
             console.error(`Error fetching data for ID ${id}:`, error);
         }
+    }
+
+    // Function to send transactionId to WordPress REST API
+    function sendTransactionId(transactionId) {
+        console.log(phpData.postId);
+        fetch(phpData.setTransactionIdUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-WP-Nonce": phpData.nonce,
+            },
+            body: JSON.stringify({
+                transactionId: transactionId, // Transaction ID
+                postId: phpData.postId,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    console.log("Updated transaction IDs:", data.updated_meta);
+                } else {
+                    console.error("Failed to update transaction IDs");
+                }
+            })
+            .catch((error) => console.error("Error:", error));
     }
 
     async function ensureCorrectNetwork(network, notice) {
@@ -149,10 +173,15 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
     function handleSuccess(buttonData, transactionId, notice) {
         updateNotice(notice, "Transaction successful!");
 
-        if (buttonData.store === "true") {
-            // todo: store transaction id using a rest update route
-            // we need transaction id..
-            console.log(transactionId);
+        if (buttonData.store) {
+            // console.log("sending transactionId: ", transactionId);
+            sendTransactionId(transactionId);
+        } else if (buttonData.checkout) {
+            // console.log("checkout!");
+            let thankYouUrl = window.location.href;
+            thankYouUrl +=
+                (thankYouUrl.includes("?") ? "&" : "?") + "transaction_id=" + encodeURIComponent(transactionId);
+            window.location.href = thankYouUrl;
         }
     }
 

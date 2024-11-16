@@ -49,3 +49,13 @@ function add_hashpress_pay_usdc_gateway($gateways)
     $gateways[] = 'WC_Gateway_HashPress_Pay_USDC';
     return $gateways;
 }
+
+function enable_hashpress_core_from_pay()
+{
+    $core = 'hashpress-core/main.php';
+
+    if (in_array($core, apply_filters('active_plugins', get_option('active_plugins'))) == false) {
+        activate_plugin($core);
+    }
+}
+add_action('init', 'enable_hashpress_core_from_pay');

@@ -111,22 +111,17 @@ class WC_Gateway_HashPress_Pay_USDC extends WC_Payment_Gateway
 
             $currency = get_woocommerce_currency();
 
-            // todo retrieve transaction id from WP DB
-            $transaction_id = isset($_GET['transaction_id']) ? $_GET['transaction_id'] : null;
+            $transaction_id = isset($_GET['transaction_id']) ? urldecode($_GET['transaction_id']) : null;
 
             if (!$transaction_id) {
                 echo '<p>Thank you for your order. WalletConnect should be opened now for you to complete the payment. Click the button below if it is not opened.</p>';
                 echo "<div id='hashpress-pay-woocommerce'>";
-                echo do_shortcode('[hashpress_pay network="' . $this->network . '" title="Open WalletConnect"  wallet="' . $this->wallet . '" accepts="USDC" currency="' . $currency . '" amount="' . $order_total . '" store="true" memo="Order at ' . get_bloginfo('name') . '"]');
+                echo do_shortcode('[hashpress_pay network="' . $this->network . '" title="Open WalletConnect"  wallet="' . $this->wallet . '" accepts="USDC" currency="' . $currency . '" amount="' . $order_total . '" memo="Order at ' . get_bloginfo('name') . '" checkout="true"]');
                 echo '</div>';
             } else {
-                // Mark the order as completed if payment is successful
+                echo '<p>Payment received, order completed. Thank you!</p>';
                 $order->update_status('completed', __('Payment received, order completed.', 'woocommerce'));
-
-                // Optionally, you might want to reduce stock levels
                 wc_reduce_stock_levels($order_id);
-
-                // Empty the cart after successful payment
                 WC()->cart->empty_cart();
 
                 // add meta info to products

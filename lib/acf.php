@@ -98,6 +98,7 @@ function add_hashpress_pay_field_groups()
                         'required' => 0,
                         'choices' => array(
                             'usd' => 'USD',
+                            'hbar' => 'HBAR',
                             'eur' => 'EUR',
                             'jpy' => 'JPY',
                             'gbp' => 'GBP',

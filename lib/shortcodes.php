@@ -20,20 +20,22 @@ function hashpress_pay_function($atts, $shortcode)
         $memo = isset($atts['memo']) ? esc_html($atts['memo']) : null;
         $amount = isset($atts['amount']) ? floatval(esc_html($atts['amount'])) : null; // convert string to float
         $currency = isset($atts['currency']) ? strtolower(esc_html($atts['currency'])) : 'hbar';
-        $store = isset($atts['store']) ? esc_html($atts['store']) : false;
         $network = isset($atts['network']) ? esc_html($atts['network']) : "testnet";
         $wallet = isset($atts['wallet']) ? esc_html($atts['wallet']) : null;
         $accepts = isset($atts['accepts']) ? esc_html($atts['accepts']) : 'HBAR';
+        $store = isset($atts['store']) ? true : false; // used by hashpress reviews
+        $checkout = isset($atts['checkout']) ? true : false;
     } else {
         $title = get_field("field_title") ?: 'Pay';
         $memo = get_field("field_memo") ?: null;
-        $amount = get_field("field_amount") ?: null;
-        $currency = get_field("field_currency") ?: 'hbar';
-        $store = get_field("field_store") ?: false;
+        $amount = floatval(get_field("field_amount")) ?: null;
+        $currency = strtolower(get_field("field_currency")) ?: 'hbar';
         $network = get_field("field_network") ?: "testnet";
         $wallet = get_field("field_wallet") ?: null;
         $accepts = get_field("field_accepts") ?: 'HBAR';
+        $store = boolval(get_field("field_store")) ?: false; // used by hashpress reviews
     }
+
 
     if (!$wallet) {
         echo "<p>Receiver Wallet ID missing.</p>";
@@ -51,10 +53,11 @@ function hashpress_pay_function($atts, $shortcode)
         "memo" => $memo,
         "amount" => $amount,
         "currency" => $currency,
-        "store" => $store,
         "network" => $network,
         "wallet" => $wallet,
-        "accepts" => $accepts
+        "accepts" => $accepts,
+        "store" => $store,
+        "checkout" => $checkout
     );
 
     // Store the attributes in a transient with the unique ID as part of the key
@@ -70,22 +73,9 @@ function hashpress_pay_function($atts, $shortcode)
             <?php }; //if
             ?>
 
-            <button type="button" class="btn hashpress-btn pay" data-id="<?php echo $unique_id; ?>">
-                <?php echo $title; ?><?php echo $badge; ?>
-            </button>
-
+            <button type="button" class="btn hashpress-btn pay" data-id="<?php echo $unique_id; ?>"><?php echo $title; ?><?php echo $badge; ?></button>
             <div class="notice"></div>
 
-            <?php
-            global $post;
-            $post_id = $post->ID;
-
-            $transaction_id = isset($_GET['transaction_id']) ? $_GET['transaction_id'] : null;
-            if ($transaction_id) {
-                add_meta_to_post($post_id, '_transaction_ids', $transaction_id);
-            }
-
-            ?>
         </div>
 <?php
     }
