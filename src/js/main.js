@@ -76,7 +76,7 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 
     // Function to send transactionId to WordPress REST API
     function sendTransactionId(transactionId) {
-        console.log(phpData.postId);
+        // console.log(phpData.postId);
         fetch(phpData.setTransactionIdUrl, {
             method: "POST",
             headers: {
@@ -91,7 +91,8 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    console.log("Updated transaction IDs:", data.updated_meta);
+                    console.log("send transactionId success");
+                    // console.log("Updated transaction IDs:", data.updated_meta);
                 } else {
                     console.error("Failed to update transaction IDs");
                 }

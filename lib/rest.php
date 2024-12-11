@@ -41,30 +41,13 @@ function hashpress_pay_get_data(WP_REST_Request $request)
 function set_transaction_id(WP_REST_Request $request)
 {
     $post_id = $request->get_param('postId');
-    $transactionId = $request->get_param('transactionId');
+    $transaction_id = $request->get_param('transactionId');
 
-    if (!$post_id || !$transactionId) {
-        return new WP_Error('missing_data', 'Post ID and variable are required', ['status' => 400]);
+    if (!$post_id || !$transaction_id) {
+        return new WP_Error('missing_data', 'post_id and transaction_id are required', ['status' => 400]);
     }
 
-    // Validate that the post ID exists
-    if (!get_post($post_id)) {
-        return new WP_Error('invalid_post', 'Post does not exist', ['status' => 404]);
-    }
+    update_hashpress_pay_option($post_id, $transaction_id);
 
-    // Retrieve the existing metadata array
-    $existing_meta = get_post_meta($post_id, '_transaction_ids', true);
-
-    // If the metadata does not exist, initialize it as an array
-    if (!is_array($existing_meta)) {
-        $existing_meta = [];
-    }
-
-    // Append the new variable to the array
-    $existing_meta[] = sanitize_text_field($transactionId);
-
-    // Update the post meta with the new array
-    update_post_meta($post_id, '_transaction_ids', $existing_meta);
-
-    return rest_ensure_response(['success' => true, 'updated_meta' => $existing_meta]);
+    return rest_ensure_response(['success' => true]);
 }
