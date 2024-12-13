@@ -4,7 +4,7 @@ Plugin Name: HashPress Pay
 Description: Integrates Hedera transactions into WordPress and WooCommerce
 Version: 0.1
 Author: HashPress
-Author URI: https://hashpresspioneers.com/
+Author URI: https://hashpress.io/
 */
 
 // Exit if accessed directly.

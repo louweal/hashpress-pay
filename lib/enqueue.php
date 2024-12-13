@@ -20,7 +20,7 @@ function enqueue_hashpress_pay_script()
         'strategy'  => 'defer', 'in_footer' => false
     ));
 
-    wp_localize_script('hashpress-pay-main-script', 'phpData', array(
+    wp_localize_script('hashpress-pay-main-script', 'hashpressPayAPI', array(
         'nonce' => wp_create_nonce('wp_rest'),   // Nonce for security
         'getButtonDataUrl' => rest_url('hashpress_pay/v1/get_data'),
         'setTransactionIdUrl' => rest_url('hashpress_pay/v1/set_transaction_id'),

@@ -53,11 +53,12 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
     }
 
     async function fetchDataById(id) {
+        // fetch button data by button ID
         try {
-            const response = await fetch(`${phpData.getButtonDataUrl}?id=${id}`, {
+            const response = await fetch(`${hashpressPayAPI.getButtonDataUrl}?id=${id}`, {
                 method: "GET",
                 headers: {
-                    "X-WP-Nonce": phpData.nonce,
+                    "X-WP-Nonce": hashpressPayAPI.nonce,
                 },
             });
 
@@ -76,16 +77,16 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 
     // Function to send transactionId to WordPress REST API
     function sendTransactionId(transactionId) {
-        // console.log(phpData.postId);
-        fetch(phpData.setTransactionIdUrl, {
+        // console.log(hashpressPayAPI.postId);
+        fetch(hashpressPayAPI.setTransactionIdUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-WP-Nonce": phpData.nonce,
+                "X-WP-Nonce": hashpressPayAPI.nonce,
             },
             body: JSON.stringify({
                 transactionId: transactionId, // Transaction ID
-                postId: phpData.postId,
+                postId: hashpressPayAPI.postId,
             }),
         })
             .then((response) => response.json())
