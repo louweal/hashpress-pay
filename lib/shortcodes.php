@@ -5,6 +5,7 @@
 add_shortcode('hashpress_pay', 'hashpress_pay_wrapper_function');
 function hashpress_pay_wrapper_function($atts)
 {
+
     $shortcode = true;
     $output = hashpress_pay_function($atts, $shortcode);
     return $output;
@@ -13,7 +14,9 @@ function hashpress_pay_wrapper_function($atts)
 function hashpress_pay_function($atts, $shortcode)
 {
     $unique_id = bin2hex(random_bytes(8));
-
+    if (!is_array($atts)) {
+        $atts = shortcode_parse_atts($atts); // Ensure attributes are parsed correctly
+    }
 
     if ($shortcode) {
         $title = isset($atts['title']) ? esc_html($atts['title']) : 'Pay';
@@ -23,7 +26,7 @@ function hashpress_pay_function($atts, $shortcode)
         $network = isset($atts['network']) ? esc_html($atts['network']) : "testnet";
         $wallet = isset($atts['wallet']) ? esc_html($atts['wallet']) : null;
         $accepts = isset($atts['accepts']) ? esc_html($atts['accepts']) : 'HBAR';
-        $store = isset($atts['store']) ? true : false; // used by hashpress reviews
+        $store = in_array('store', $atts, true) || isset($atts['store']); // used by hashpress reviews
         $checkout = isset($atts['checkout']) ? true : false;
     } else {
         $title = get_field("field_title") ?: 'Pay';
@@ -35,7 +38,6 @@ function hashpress_pay_function($atts, $shortcode)
         $accepts = get_field("field_accepts") ?: 'HBAR';
         $store = boolval(get_field("field_store")) ?: false; // used by hashpress reviews
     }
-
 
     if (!$wallet) {
         echo "<p>Receiver Wallet ID missing.</p>";

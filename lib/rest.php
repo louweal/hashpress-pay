@@ -47,7 +47,7 @@ function set_transaction_id(WP_REST_Request $request)
         return new WP_Error('missing_data', 'post_id and transaction_id are required', ['status' => 400]);
     }
 
-    update_hashpress_pay_option($post_id, $transaction_id);
+    update_transaction_history($post_id, $transaction_id);
 
     return rest_ensure_response(['success' => true]);
 }

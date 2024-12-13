@@ -132,7 +132,7 @@ class WC_Gateway_HashPress_Pay_HBAR extends WC_Payment_Gateway
                 // add meta info to products
                 foreach ($order->get_items() as $item_id => $item) {
                     $product_id = $item->get_product_id();
-                    update_hashpress_pay_option($product_id, $transaction_id);
+                    update_transaction_history($product_id, $transaction_id);
                 }
             }
         } else {
