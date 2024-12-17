@@ -118,6 +118,7 @@ class WC_Gateway_HashPress_Pay_USDC extends WC_Payment_Gateway
                 echo "<div id='hashpress-pay-woocommerce'>";
                 echo do_shortcode('[hashpress_pay network="' . $this->network . '" title="Open WalletConnect"  wallet="' . $this->wallet . '" accepts="USDC" currency="' . $currency . '" amount="' . $order_total . '" memo="Order at ' . get_bloginfo('name') . '" checkout="true"]');
                 echo '</div>';
+                echo "<br><br><a class='btn' href='" . esc_html(get_post_type_archive_link('product')) . "'>Return to shop</a>";
             } else {
                 echo '<p>Payment received, order completed. Thank you!</p>';
                 $order->update_status('completed', __('Payment received, order completed.', 'woocommerce'));
