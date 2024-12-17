@@ -35,6 +35,14 @@ import { TransferTransaction, Hbar, AccountId, TokenId } from "@hashgraph/sdk";
 
                 await ensureCorrectNetwork(buttonData.network, notice);
 
+                console.log(window.pairingData);
+
+                if (window.pairingData == undefined) {
+                    updateNotice(notice, "Please install a Hedera wallet. We recommend HashPack.");
+                    console.log("no found");
+                    return;
+                }
+
                 const acceptedCurrency = buttonData.accepts.toUpperCase();
 
                 let result =
