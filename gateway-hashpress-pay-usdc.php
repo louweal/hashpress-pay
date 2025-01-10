@@ -128,7 +128,7 @@ class WC_Gateway_HashPress_Pay_USDC extends WC_Payment_Gateway
                 // add meta info to products
                 foreach ($order->get_items() as $item_id => $item) {
                     $product_id = $item->get_product_id();
-                    update_transaction_history($product_id, $transaction_id);
+                    hashpress_pay_update_transaction_history($product_id, $transaction_id);
                 }
             }
         } else {

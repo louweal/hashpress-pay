@@ -1,5 +1,5 @@
 <?php
-function update_transaction_history($post_id, $transaction_id)
+function hashpress_pay_update_transaction_history($post_id, $transaction_id)
 {
     $current_transaction_history = get_post_meta($post_id, "hashpress_transaction_history", true);
 
